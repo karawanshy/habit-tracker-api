@@ -1,5 +1,4 @@
 from enum import Enum
-from pydantic import BaseModel
 from sqlmodel import SQLModel, Field, Relationship
 from datetime import date, time
 from typing import Optional, List
@@ -29,6 +28,9 @@ class HabitCompletion(HabitCompletionBase, table=True):
     id: int = Field(default=None, primary_key=True)
     habit: "Habit" = Relationship(back_populates="completed_dates")
 
+    def __repr__(self):
+        return f"HabitCompletion(id={self.id}, habit_id={self.habit_id}, date={self.date})"
+
 class HabitBase(SQLModel):
     name: str
     description: Optional[str] = None
@@ -36,9 +38,12 @@ class HabitBase(SQLModel):
     frequency: Frequency
     start_date: date
     reminder_time: Optional[time] = None
-     # Optional user reference (to be implemented later if user accounts are added)
-    user_id: Optional[int] = Field(default=None, foreign_key="user.id")
     
 class Habit(HabitBase, table=True):
     id: int = Field(default=None, primary_key=True)
     completed_dates: List[HabitCompletion] = Relationship(back_populates="habit")
+
+    def __repr__(self):
+        return (f"Habit(id={self.id}, name='{self.name}', category='{self.category}', "
+                f"frequency='{self.frequency}', start_date={self.start_date}, "
+                f"completed_today={any(self.completed_dates)})")
