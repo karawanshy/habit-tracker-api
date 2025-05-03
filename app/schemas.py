@@ -2,6 +2,7 @@ from pydantic import BaseModel, Field, field_validator
 from typing import Optional, List
 from datetime import date, time
 from app.models import HabitCompletionBase, Category, Frequency
+from app.utils import normalize_category, normalize_frequency
 
 # ------------------------------ SHARED DETAILES ------------------------------
 
@@ -13,15 +14,11 @@ class HabitDetails(BaseModel):
 
     @field_validator('category', mode='before')
     def validate_category(cls, value):
-        if isinstance(value, str):
-            value = value.strip().title()
-        return Category(value)
+        return normalize_category(value)
 
     @field_validator('frequency', mode='before')
     def validate_frequency(cls, value):
-        if isinstance(value, str):
-            value = value.strip().title()
-        return Frequency(value)
+        return normalize_frequency(value)
     
 # ------------------------------ INPUT SCHEMAS ------------------------------
 

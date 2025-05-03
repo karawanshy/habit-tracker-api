@@ -1,16 +1,11 @@
 from sqlmodel import Session, select
 from app.schemas import HabitCreate, HabitCompletionStatus, HabitWithCompletions, HabitUpdate, HabitSummary
-from app.models import Habit, HabitCompletion
-from typing import List
+from app.models import Habit, HabitCompletion, Category, Frequency
+from app.utils import get_habit, normalize_name
+from typing import List, Optional
 from datetime import date
 
-# Helper function to get a habit
-def get_habit(habit_id: int, db: Session) -> Habit:
-    db_habit = db.get(Habit, habit_id)
-    if not db_habit:
-        raise ValueError(f"Habit with id {habit_id} not found.")
-    return db_habit
-
+# Create a HabitSummary schema from a Habit ORM model.
 def create_habit_summary(habit: Habit) -> HabitSummary:
     return HabitSummary(
         id=habit.id,
@@ -24,7 +19,8 @@ def create_habit_summary(habit: Habit) -> HabitSummary:
 
 def create_habit(habit: HabitCreate, db: Session) -> HabitSummary:
     db_habit = Habit(
-        **habit.model_dump(), 
+        **habit.model_dump(exclude={"name"}),
+        name=normalize_name(habit.name),
         start_date=date.today()
     )
     db.add(db_habit)
@@ -90,12 +86,15 @@ def get_habit_today_completion_status(habit_id: int, db: Session) -> HabitComple
         completed_today=completed.status if completed else False
     )
 
-def get_habits(db: Session, skip: int = 0, limit: int = 30) -> List[HabitSummary]:
-    habits = db.exec(
-        select(Habit).
-        offset(skip).
-        limit(limit)
-    ).all()
+def get_habits(db: Session, category: Optional[Category] = None, frequency: Optional[Frequency] = None) -> List[HabitSummary]:
+    statement = select(Habit)
+
+    if category:
+        statement = statement.where(Habit.category == category)
+    if frequency:
+        statement = statement.where(Habit.frequency == frequency)
+
+    habits = db.exec(statement).all()
 
     return [ create_habit_summary(habit) for habit in habits ]
 
@@ -114,6 +113,21 @@ def get_habit_by_name(name: str, db: Session) -> HabitSummary:
     
     return create_habit_summary(db_habit)
 
+def get_habits_by_category(category: Category, db: Session) -> List[HabitSummary]:
+    db_habits = db.exec(
+        select(Habit).
+        where(Habit.category == category)
+    ).all()
+
+    return [ create_habit_summary(habit) for habit in db_habits ]
+
+def get_habits_by_frequency(frequency: Frequency, db: Session) -> List[HabitSummary]:
+    db_habits = db.exec(
+        select(Habit).
+        where(Habit.frequency == frequency)
+    ).all()
+
+    return [ create_habit_summary(habit) for habit in db_habits ]
 
 def get_habit_completion_dates(habit_id: int, db: Session) -> HabitWithCompletions:
     db_habit = get_habit(habit_id, db)
