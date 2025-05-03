@@ -1,12 +1,11 @@
 from pydantic import BaseModel, Field, field_validator
 from typing import Optional, List
 from datetime import date, time
-from models import HabitBase, HabitCompletionBase, Category, Frequency
+from models import HabitCompletionBase, Category, Frequency
 
-# ------------------------------ SHARED FIELDS ------------------------------
+# ------------------------------ SHARED DETAILES ------------------------------
 
-class HabitAttributes(BaseModel):
-    name: Optional[str] = None
+class HabitDetails(BaseModel):
     description: Optional[str] = None
     category: Optional[Category] = Field(default=Category.GENERAL)
     frequency: Optional[Frequency] = None
@@ -26,12 +25,12 @@ class HabitAttributes(BaseModel):
     
 # ------------------------------ INPUT SCHEMAS ------------------------------
 
-class HabitCreate(HabitAttributes):
+class HabitCreate(HabitDetails):
     name: str
     frequency: Frequency
 
-class HabitUpdate(HabitAttributes):
-    pass
+class HabitUpdate(HabitDetails):
+    name: Optional[str] = None
 
 class HabitCompletionCreate(HabitCompletionBase):
     completed_today: bool = Field(default=False)
@@ -43,12 +42,8 @@ class HabitInfoBase(BaseModel):
     name: str
 
 # Used to show a summary of a habit
-class HabitSummary(HabitInfoBase):
-    description: Optional[str] = None
-    category: Optional[str] = None
-    frequency: Optional[str] = None
+class HabitSummary(HabitInfoBase, HabitDetails):
     start_date: date
-    reminder_time: Optional[time] = None
     completed_today: bool
 
 # Used to show if a habit is completed today (by ID or name)

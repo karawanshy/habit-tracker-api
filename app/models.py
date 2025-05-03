@@ -23,13 +23,11 @@ class Frequency(str, Enum):
 class HabitCompletionBase(SQLModel):
     date: date
     habit_id: int = Field(foreign_key="habit.id")
+    status: bool = Field(default=False)
 
 class HabitCompletion(HabitCompletionBase, table=True):
     id: int = Field(default=None, primary_key=True)
     habit: "Habit" = Relationship(back_populates="completed_dates")
-
-    def __repr__(self):
-        return f"HabitCompletion(id={self.id}, habit_id={self.habit_id}, date={self.date})"
 
 class HabitBase(SQLModel):
     name: str
