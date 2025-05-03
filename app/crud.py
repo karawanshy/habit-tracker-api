@@ -1,6 +1,6 @@
-from sqlmodel import Session
-from schemas import HabitCreate, HabitCompletionStatus, HabitWithCompletions, HabitUpdate
-from models import Habit, HabitCompletion
+from sqlmodel import Session, select
+from app.schemas import HabitCreate, HabitCompletionStatus, HabitWithCompletions, HabitUpdate, HabitSummary
+from app.models import Habit, HabitCompletion
 from typing import List
 from datetime import date
 
@@ -11,8 +11,18 @@ def get_habit(habit_id: int, db: Session) -> Habit:
         raise ValueError(f"Habit with id {habit_id} not found.")
     return db_habit
 
+def create_habit_summary(habit: Habit) -> HabitSummary:
+    return HabitSummary(
+        id=habit.id,
+        name=habit.name,
+        description=habit.description,
+        category=habit.category,
+        frequency=habit.frequency,
+        reminder_time=habit.reminder_time,
+        start_date=habit.start_date,
+    )
 
-def create_habit(habit: HabitCreate, db: Session) -> Habit:
+def create_habit(habit: HabitCreate, db: Session) -> HabitSummary:
     db_habit = Habit(
         **habit.model_dump(), 
         start_date=date.today()
@@ -20,9 +30,10 @@ def create_habit(habit: HabitCreate, db: Session) -> Habit:
     db.add(db_habit)
     db.commit()
     db.refresh(db_habit)
-    return db_habit
 
-def update_habit(habit_id: int, habit: HabitUpdate, db: Session) -> Habit:
+    return create_habit_summary(db_habit)
+
+def update_habit(habit_id: int, habit: HabitUpdate, db: Session) -> HabitSummary:
     db_habit = get_habit(habit_id, db)
     
     habit_data = habit.model_dump()
@@ -32,11 +43,12 @@ def update_habit(habit_id: int, habit: HabitUpdate, db: Session) -> Habit:
 
     db.commit()
     db.refresh(db_habit)
-    return db_habit
+    
+    return create_habit_summary(db_habit)
 
 def mark_habit_completed_today(habit_id: int, status: bool, db: Session) -> HabitCompletionStatus:
     existing_completion = db.exec(
-    HabitCompletion.select()
+    select(HabitCompletion)
     .where((HabitCompletion.habit_id == habit_id) & (HabitCompletion.date == date.today()))
     ).first()
 
@@ -63,42 +75,51 @@ def delete_habit(habit_id: int, db: Session) -> bool:
     db.commit()
     return True
 
-def get_habits(db: Session, skip: int = 0, limit: int = 30) -> List[Habit]:
-    return db.exec(
-        Habit.select().
-        offset(skip).
-        limit(limit)
-    ).all()
-
-def get_habit_by_id(habit_id: int, db: Session) -> Habit:
-    return get_habit(habit_id, db)
-
-def get_habit_by_name(name: str, db: Session) -> Habit:
-    return db.exec(
-        Habit.select().
-        where(Habit.name == name)
-    ).first()
-
 def get_habit_today_completion_status(habit_id: int, db: Session) -> HabitCompletionStatus:
-    habit = get_habit(habit_id, db)
+    db_habit = get_habit(habit_id, db)
     
-    completed = db.exec(HabitCompletion.select()
+    completed = db.exec(select(HabitCompletion)
                                .where(
                                     (HabitCompletion.habit_id == habit_id) & 
                                     (HabitCompletion.date == date.today()))
         ).first()
     
     return HabitCompletionStatus(
-        id=habit.id,
-        name=habit.name,
+        id=db_habit.id,
+        name=db_habit.name,
         completed_today=completed.status if completed else False
     )
+
+def get_habits(db: Session, skip: int = 0, limit: int = 30) -> List[HabitSummary]:
+    habits = db.exec(
+        select(Habit).
+        offset(skip).
+        limit(limit)
+    ).all()
+
+    return [ create_habit_summary(habit) for habit in habits ]
+
+def get_habit_by_id(habit_id: int, db: Session) -> HabitSummary:
+    db_habit =  get_habit(habit_id, db)
+    return create_habit_summary(db_habit)
+
+def get_habit_by_name(name: str, db: Session) -> HabitSummary:
+    db_habit = db.exec(
+        select(Habit).
+        where(Habit.name == name)
+    ).first()
+
+    if db_habit is None:
+        raise ValueError(f"Habit with name '{name}' not found.")
+    
+    return create_habit_summary(db_habit)
+
 
 def get_habit_completion_dates(habit_id: int, db: Session) -> HabitWithCompletions:
     db_habit = get_habit(habit_id, db)
     
     completion_dates = db.exec(
-        HabitCompletion.select().
+        select(HabitCompletion).
         where(HabitCompletion.habit_id == habit_id)
     ).all()
 

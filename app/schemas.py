@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field, field_validator
 from typing import Optional, List
 from datetime import date, time
-from models import HabitCompletionBase, Category, Frequency
+from app.models import HabitCompletionBase, Category, Frequency
 
 # ------------------------------ SHARED DETAILES ------------------------------
 
@@ -44,7 +44,6 @@ class HabitInfoBase(BaseModel):
 # Used to show a summary of a habit
 class HabitSummary(HabitInfoBase, HabitDetails):
     start_date: date
-    completed_today: bool
 
 # Used to show if a habit is completed today (by ID or name)
 class HabitCompletionStatus(HabitInfoBase):

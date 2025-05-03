@@ -12,7 +12,7 @@ async def lifespan(app: FastAPI):
     yield
     print("Shutting down Habit Tracker API.")
 
-app = FastAPI("Habit Tracker API", lifespan=lifespan)
+app = FastAPI(title="Habit Tracker API", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
