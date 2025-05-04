@@ -33,20 +33,51 @@ class HabitUpdate(HabitDetails):
 class HabitCompletionCreate(HabitCompletionBase):
     completed_today: bool = Field(default=False)
 
+class UserCreate(BaseModel):
+    username: str
+    password: str
+    email: str
+
+class UserUpdate(BaseModel):
+    username: Optional[str] = None
+    password: Optional[str] = None
+    email: Optional[str] = None
+
+class UserLogin(BaseModel):
+    username: str
+    password: str
+
 # ------------------------------ OUTPUT SCHEMAS ------------------------------  
 
-class HabitInfoBase(BaseModel):
+class HabitBasicInfo(BaseModel):
     id: int
     name: str
 
 # Used to show a summary of a habit
-class HabitSummary(HabitInfoBase, HabitDetails):
+class HabitSummary(HabitBasicInfo, HabitDetails):
     start_date: date
 
+    class Config:
+        orm_mode = True
+
 # Used to show if a habit is completed today (by ID or name)
-class HabitCompletionStatus(HabitInfoBase):
+class HabitCompletionStatus(HabitBasicInfo):
     completed_today: bool = Field(default=False)
 
 # Used to show all completion dates for a specific habit
-class HabitWithCompletions(HabitInfoBase):
+class HabitWithCompletions(HabitBasicInfo):
     completed_dates: Optional[List[date]] = None
+
+class UserSummary(BaseModel):
+    id: int
+    username: str
+    email: str
+    habits: List[HabitBasicInfo] = []
+
+    class Config:
+        orm_mode = True
+
+class UserLoginResponse(BaseModel):
+    access_token: str
+    token_type: str = Field(default="bearer")
+    username: str
