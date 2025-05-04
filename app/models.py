@@ -4,6 +4,7 @@ from datetime import datetime, date, time, timezone
 from typing import Optional, List
 from pydantic import EmailStr
 import bcrypt
+from passlib.hash import bcrypt
 
 class Category(str, Enum):
     PERSONAL_DEVELOPMENT = "Personal Development"
@@ -53,22 +54,22 @@ class Habit(HabitBase, table=True):
 
     
 class UserBase(SQLModel):
-    username: str = Field(primary_key=True, unique=True)
-    hashed_password: str
-    email: EmailStr = Field(unique=True)
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    username: str
+    email: EmailStr
 
 class User(UserBase, table=True):
-    id: int = Field(default=None, primary_key=True, unique=True)
+    id: int = Field(sa_column=Column(Integer, primary_key=True, nullable=False, autoincrement=True))
+    password: str
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     habits: List[Habit] = Relationship(back_populates="user")
-
-    def set_password(self, password: str):
-        """Hashes and sets the user's password."""
-        self.password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
-
-    def check_password(self, password: str) -> bool:
-        """Checks if the provided password matches the hashed password."""
-        return bcrypt.checkpw(password.encode('utf-8'), self.password.encode('utf-8'))
     
+    def set_password(self, password: str):
+        """Hashes and sets the user's password using passlib."""
+        self.password = bcrypt.hash(password)
+
+    def verify_password(self, password: str) -> bool:
+        """Verifies the password using passlib."""
+        return bcrypt.verify(password, self.password)
+        
     def __repr__(self):
         return (f"User(id={self.id}, username='{self.username}', email='{self.email}')")

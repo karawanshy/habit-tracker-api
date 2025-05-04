@@ -78,6 +78,6 @@ class UserSummary(BaseModel):
         orm_mode = True
 
 class UserLoginResponse(BaseModel):
-    access_token: str
-    token_type: str = Field(default="bearer")
     username: str
+    access_token: str
+    token_type: str

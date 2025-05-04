@@ -1,8 +1,9 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.database import init_db
-from app.routes import router
+from app.routers import users, habits, auth
 from contextlib import asynccontextmanager
+from app.openapi_config import custom_openapi
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -14,15 +15,13 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Habit Tracker API", lifespan=lifespan)
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# Set custom OpenAPI with OAuth2 security
+app.openapi = lambda: custom_openapi(app)
 
-app.include_router(router)
+app.include_router(users.router, prefix="/users", tags=["Users"])
+app.include_router(habits.router, prefix="/habits", tags=["Habits"])
+app.include_router(auth.router, tags=["Auth"])
+
 
 @app.get("/")
 async def root():
