@@ -68,9 +68,14 @@ class HabitCompletionStatus(HabitBasicInfo):
 class HabitWithCompletions(HabitBasicInfo):
     completed_dates: Optional[List[date]] = None
 
-class UserSummary(BaseModel):
+class UserResponse(BaseModel):
     id: int
     username: str
+
+    class Config:
+        orm_mode = True
+
+class UserSummary(UserResponse):
     email: str
     habits: List[HabitBasicInfo] = []
 
