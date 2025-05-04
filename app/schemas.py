@@ -5,10 +5,10 @@ from app.models import HabitCompletionBase, Category, Frequency
 from app.utils import normalize_category, normalize_frequency
 
 # ------------------------------ SHARED DETAILES ------------------------------
-
+    
 class HabitDetails(BaseModel):
     description: Optional[str] = None
-    category: Optional[Category] = Field(default=Category.GENERAL)
+    category: Optional[Category] = None
     frequency: Optional[Frequency] = None
     reminder_time: Optional[time] = None
 
@@ -24,6 +24,7 @@ class HabitDetails(BaseModel):
 
 class HabitCreate(HabitDetails):
     name: str
+    category: Optional[Category] = Field(default=Category.GENERAL)
     frequency: Frequency
 
 class HabitUpdate(HabitDetails):

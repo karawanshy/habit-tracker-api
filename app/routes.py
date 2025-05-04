@@ -1,12 +1,11 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from app.database import get_session
 from app.schemas import HabitCreate, HabitUpdate, HabitSummary, HabitWithCompletions, HabitCompletionStatus
 from app.models import Category, Frequency
-from app.utils import normalize_category, normalize_frequency, normalize_name
+from app.utils import normalize_name, normalize_category, normalize_frequency
 import app.crud as crud
-from typing import List
+from typing import List, Optional
 from sqlmodel import Session
-from typing import Optional
 
 router = APIRouter()
 
@@ -28,17 +27,14 @@ async def mark_habit_completed_today(habit_id: int, status: bool, db: Session = 
 
 @router.get("/habits/", response_model=List[HabitSummary])
 def get_habits(
-    category: Optional[str] = None,
-    frequency: Optional[str] = None,
+    category: Optional[str] = Query(default=None, description=f"One of: {", ".join(c.value for c in Category)}"),
+    frequency: Optional[str] = Query(default=None, description=f"One of: {", ".join(f.value for f in Frequency)}"),
+
     db: Session = Depends(get_session)
 ):
-    params = {}
-    if category:
-        params["category"] = normalize_category(category)
-    if frequency:
-        params["frequency"] = normalize_frequency(frequency)
-    return crud.get_habits(db, **params)
-
+    return crud.get_habits(db,
+                           category=normalize_category(category),
+                           frequency=normalize_frequency(frequency))
 
 @router.get("/habits/{habit_id}", response_model=HabitSummary)
 async def get_habit_by_id(habit_id: int, db: Session = Depends(get_session)):
