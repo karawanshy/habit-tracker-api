@@ -4,18 +4,24 @@ from datetime import date, time
 from app.models import HabitCompletionBase, Category, Frequency
 from app.utils import normalize_category, normalize_frequency
 
-# ------------------------------ SHARED DETAILES ------------------------------
-    
+# ------------------------------ SHARED DETAILS ------------------------------
+
 class HabitDetails(BaseModel):
-    description: Optional[str] = None
+    """
+    Base class for shared habit details like description, category, frequency, and reminder time.
+    Used as a parent class for creating and updating habits.
+    """
+    description: Optional[str] = None 
     category: Optional[Category] = None
     frequency: Optional[Frequency] = None
     reminder_time: Optional[time] = None
 
+    # Validator to normalize the category input before it's set
     @field_validator('category', mode='before')
     def validate_category(cls, value):
         return normalize_category(value)
 
+    # Validator to normalize the frequency input before it's set
     @field_validator('frequency', mode='before')
     def validate_frequency(cls, value):
         return normalize_frequency(value)
@@ -23,66 +29,107 @@ class HabitDetails(BaseModel):
 # ------------------------------ INPUT SCHEMAS ------------------------------
 
 class HabitCreate(HabitDetails):
+    """
+    Schema for creating a new habit. Inherits from HabitDetails and adds the required 'name' field.
+    """
     name: str
-    category: Optional[Category] = Field(default=Category.GENERAL)
+    category: Optional[Category] = Field(default=Category.GENERAL)  # Default category if none is provided
     frequency: Frequency
 
 class HabitUpdate(HabitDetails):
+    """
+    Schema for updating an existing habit. Only the name and optional details can be updated.
+    """
     name: Optional[str] = None
 
 class HabitCompletionCreate(HabitCompletionBase):
+    """
+    Schema for creating a habit completion record, indicating if the habit was completed today.
+    """
     completed_today: bool = Field(default=False)
 
 class UserCreate(BaseModel):
-    username: str
-    password: str
-    email: str
+    """
+    Schema for creating a new user, requiring a username, password, and email.
+    """
+    username: str  
+    password: str  
+    email: str 
 
 class UserUpdate(BaseModel):
-    username: Optional[str] = None
+    """
+    Schema for updating an existing user's information. Fields are optional for updating.
+    """
+    username: Optional[str] = None  
     password: Optional[str] = None
     email: Optional[str] = None
 
 class UserLogin(BaseModel):
-    username: str
-    password: str
+    """
+    Schema for user login, requiring a username and password for authentication.
+    """
+    username: str 
+    password: str 
 
-# ------------------------------ OUTPUT SCHEMAS ------------------------------  
+# ------------------------------ OUTPUT SCHEMAS ------------------------------
 
 class HabitBasicInfo(BaseModel):
-    id: int
-    name: str
+    """
+    Basic information about a habit, including its ID and name.
+    Used for habit summaries or basic responses.
+    """
+    id: int  
+    name: str 
 
-# Used to show a summary of a habit
+# Used to show a summary of a habit, including start date and additional habit details
 class HabitSummary(HabitBasicInfo, HabitDetails):
-    start_date: date
+    """
+    Extended habit information for displaying a summary of the habit,
+    including the start date and details like description, category, and frequency.
+    """
+    start_date: date 
 
     class Config:
-        orm_mode = True
+        orm_mode = True  # Ensures compatibility with ORM models (like SQLAlchemy)
 
 # Used to show if a habit is completed today (by ID or name)
 class HabitCompletionStatus(HabitBasicInfo):
-    completed_today: bool = Field(default=False)
-
+    """
+    Displays whether the habit was completed today.
+    """
+    completed_today: bool = Field(default=False) 
+    
 # Used to show all completion dates for a specific habit
 class HabitWithCompletions(HabitBasicInfo):
+    """
+    Displays a list of all completion dates for a given habit.
+    """
     completed_dates: Optional[List[date]] = None
 
 class UserResponse(BaseModel):
+    """
+    Basic response for a user, including the user ID and username.
+    """
     id: int
     username: str
 
     class Config:
-        orm_mode = True
+        orm_mode = True 
 
 class UserSummary(UserResponse):
+    """
+    Extended user information for displaying user details along with their habits.
+    """
     email: str
     habits: List[HabitBasicInfo] = []
 
     class Config:
-        orm_mode = True
+        orm_mode = True  # Ensures compatibility with ORM models (like SQLAlchemy)
 
 class UserLoginResponse(BaseModel):
-    username: str
-    access_token: str
+    """
+    Response schema for user login, including the username and access token.
+    """
+    username: str 
+    access_token: str 
     token_type: str
