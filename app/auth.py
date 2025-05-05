@@ -105,3 +105,24 @@ def get_current_user(token: str = Depends(oauth2_bearer), db: Session = Depends(
         # Raise an exception if the user does not exist in the database
         raise credentials_exception
     return user
+
+def require_admin(current_user: User = Depends(get_current_user)):
+    """
+    Dependency to ensure the current user has admin privileges.
+
+    parameters:
+    - user (User): The current authenticated user object.
+
+    returns:
+    - User: The authenticated user object if they are an admin.
+
+    raises:
+    - HTTPException: Raises 403 if the user does not have admin privileges.
+        
+    """
+    if not current_user.is_admin:
+        raise HTTPException(
+            status_code=403, 
+            detail="Admin access required"
+        )
+    return current_user

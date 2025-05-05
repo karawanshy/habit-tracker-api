@@ -5,7 +5,7 @@ from app.models import User
 import app.crud.users as users
 from typing import List
 from sqlmodel import Session
-from app.auth import get_current_user
+from app.auth import get_current_user, require_admin
 
 router = APIRouter()
 
@@ -53,7 +53,7 @@ async def update_user(
 
 # ------------------------------ GET ROUTES ------------------------------
 
-@router.get("/", response_model=List[s.UserSummary])
+@router.get("/", response_model=List[s.UserSummary], dependencies=[Depends(require_admin)])
 def get_users(
     db: Session = Depends(get_session)  # Dependency to get the database session.
 ):
@@ -68,8 +68,7 @@ def get_users(
     """
     return users.get_users(db)
 
-
-@router.get("/{user_id}", response_model=s.UserSummary)
+@router.get("/{user_id}", response_model=s.UserSummary, dependencies=[Depends(require_admin)])
 def get_user_by_id(
     user_id: int,  # ID of the user to retrieve.
     db: Session = Depends(get_session)  # Dependency to get the database session.
@@ -87,7 +86,7 @@ def get_user_by_id(
     return users.get_user_by_id(user_id, db)
 
 
-@router.get("/by-username/{username}", response_model=s.UserSummary)
+@router.get("/by-username/{username}", response_model=s.UserSummary, dependencies=[Depends(require_admin)])
 def get_user_by_username(
     username: str,  # Username of the user to retrieve.
     db: Session = Depends(get_session)  # Dependency to get the database session.

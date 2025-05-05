@@ -59,11 +59,11 @@ class HabitBase(SQLModel):
     Base class for Habit, containing the core fields that define a habit.
     """
     name: str
-    description: Optional[str] = None  # Optional description of the habit
-    category: Optional[Category] = Field(default=Category.GENERAL)  # Default to 'General' if no category specified
-    frequency: Frequency  # Frequency of the habit (Daily, Weekly, etc.)
-    start_date: date  # The start date for the habit
-    reminder_time: Optional[time] = None  # Optional reminder time for the habit
+    description: Optional[str] = None 
+    category: Optional[Category] = Field(default=Category.GENERAL)  
+    frequency: Frequency  
+    start_date: date  
+    reminder_time: Optional[time] = None  
     user_id: int = Field(sa_column=Column(Integer, ForeignKey("user.id", ondelete="CASCADE"), nullable=False))
 
 class Habit(HabitBase, table=True):
@@ -93,6 +93,7 @@ class UserBase(SQLModel):
     """
     username: str
     email: EmailStr  # Email should be validated as a proper email format
+    is_admin: bool = False # Indicates if the user has admin privileges
 
 class User(UserBase, table=True):
     """
