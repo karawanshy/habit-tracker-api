@@ -17,8 +17,8 @@ async def create_habit(habit: s.HabitCreate, current_user: User = Depends(get_cu
     return habits.create_habit(habit, current_user.id, db)
 
 @router.post("/complete/today/{habit_id}", response_model=s.HabitCompletionStatus)
-async def mark_habit_completed_today(habit_id: int, status: bool, current_user: User = Depends(get_current_user), db: Session = Depends(get_session)):
-    return completions.mark_habit_completed_today(habit_id, status, current_user.id, db)
+async def mark_habit_completed_today(habit_id: int, current_user: User = Depends(get_current_user), db: Session = Depends(get_session)):
+    return completions.mark_habit_completed_today(habit_id, current_user.id, db)
 
 # ------------------------------ PUT ROUTES ------------------------------
 @router.put("/{habit_id}", response_model=s.HabitSummary)

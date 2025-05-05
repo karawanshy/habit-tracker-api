@@ -1,6 +1,6 @@
 from app.models import Category, Frequency, Habit, User
 from sqlmodel import Session, select
-from fastapi import HTTPException, status
+from fastapi import HTTPException, status, Query
 from typing import Optional
 from datetime import date
 

@@ -2,17 +2,9 @@ from sqlmodel import Session, select
 import app.schemas as s
 from app.models import HabitCompletion
 from app.utils import get_habit_of_user, get_today
-from datetime import date
-from fastapi import HTTPException
 
 
-def mark_habit_completed_today(habit_id: int, status: bool, user_id: int, db: Session) -> s.HabitCompletionStatus:
-    if not isinstance(status, bool):
-        raise HTTPException(
-            status_code=400,
-            detail=f"Invalid status value: {status}. It must be a boolean."
-        )
-    
+def mark_habit_completed_today(habit_id: int, user_id: int, db: Session) -> s.HabitCompletionStatus:
     # Verify habit ownership
     db_habit = get_habit_of_user(habit_id, user_id, db)
 
@@ -22,10 +14,8 @@ def mark_habit_completed_today(habit_id: int, status: bool, user_id: int, db: Se
     .where((HabitCompletion.habit_id == habit_id) & (HabitCompletion.date == get_today()))
     ).first()
 
-    if existing_completion:
-        existing_completion.status = status
-    else:
-        existing_completion = HabitCompletion(habit_id=habit_id, date=get_today(), status=status)
+    if not existing_completion:
+        existing_completion = HabitCompletion(habit_id=habit_id, date=get_today(), status=True)
         db.add(existing_completion)
 
     db.commit()
@@ -34,7 +24,7 @@ def mark_habit_completed_today(habit_id: int, status: bool, user_id: int, db: Se
     return s.HabitCompletionStatus(
         id=habit_id,
         name=db_habit.name,
-        completed_today=status
+        completed_today=True
     )
 
 def get_habit_today_completion_status(habit_id: int, user_id:int, db: Session) -> s.HabitCompletionStatus:
