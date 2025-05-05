@@ -1,8 +1,10 @@
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
+from fastapi import FastAPI, Depends
 from app.database import init_db
-from app.routes import router
+from app.routers import users, habits, auth
 from contextlib import asynccontextmanager
+from app.auth import get_current_user
+from app.models import User
+from app.schemas import UserResponse
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -14,16 +16,11 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Habit Tracker API", lifespan=lifespan)
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+app.include_router(users.router, prefix="/users", tags=["Users"])
+app.include_router(habits.router, prefix="/habits", tags=["Habits"])
+app.include_router(auth.router, tags=["Auth"])
 
-app.include_router(router)
 
-@app.get("/")
-async def root():
-    return {"message": "Welcome to the Habit Tracker API!"}
+@app.get("/", response_model=UserResponse)
+async def root(current_user: User = Depends(get_current_user)):
+    return current_user

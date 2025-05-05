@@ -1,7 +1,8 @@
-from app.models import Category, Frequency, Habit
-from sqlmodel import Session
-from fastapi import HTTPException, status, Query
+from app.models import Category, Frequency, Habit, User
+from sqlmodel import Session, select
+from fastapi import HTTPException, status
 from typing import Optional
+from datetime import date
 
 # Normalize a string input to a valid Category enum member.
 def normalize_category(value: Optional[str]) -> Optional[Category]:
@@ -43,13 +44,34 @@ def frequency_query(freq: Optional[str] = Query(default=None)) -> Optional[Frequ
 def normalize_name(value: str) -> str:
     return value.strip().title()
 
+# Normalize username by converting it to lower case.
+def normalize_username(value: str) -> str:
+    return value.strip().lower()
+
 # Retrieve a Habit instance from the database by its ID.
-# Raises a ValueError if the habit does not exist.
-def get_habit(habit_id: int, db: Session) -> Habit:
-    db_habit = db.get(Habit, habit_id)
+# Raises a HTTPException if the habit does not exist.
+def get_habit_of_user(habit_id: int, user_id: int, db: Session) -> Habit:
+    db_habit = db.exec(
+        select(Habit).where(Habit.id == habit_id, Habit.user_id == user_id)
+    ).first()
+
     if not db_habit:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Habit with id {habit_id} not found."
+            detail=f"Habit with id {habit_id} not found or not authorized."
         )
     return db_habit
+
+# Retrieve a User instance from the database by its ID.
+# Raises a HTTPException if the user does not exist.
+def get_user(user_id: int, db: Session) -> User:
+    db_user = db.get(User, user_id)
+    if not db_user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"User with id {user_id} not found."
+        )
+    return db_user
+
+def get_today() -> date:
+    return date.today()
