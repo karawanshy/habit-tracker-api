@@ -7,6 +7,7 @@ dist/
 build/
 
 # Virtual environments
+.venv/
 venv/
 .env/
 
@@ -27,5 +28,4 @@ Thumbs.db
 # Migrations (optional)
 alembic/versions/*.pyc
 
-script.py.mako
 alembic/README
