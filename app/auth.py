@@ -7,7 +7,7 @@ from app.models import User
 import os
 from fastapi import Depends, HTTPException, status
 from jose import JWTError
-from app.database import get_session
+from app.database import get_db
 
 # Secret key and algorithm for JWT encoding
 SECRET_KEY = os.getenv("SECRET_KEY")
@@ -64,7 +64,7 @@ def create_access_token(username: str, user_id: int, expires_delta: timedelta):
 
 # ---------------------------- Dependency to Retrieve Current User ----------------------------
 
-def get_current_user(token: str = Depends(oauth2_bearer), db: Session = Depends(get_session)):
+def get_current_user(token: str = Depends(oauth2_bearer), db: Session = Depends(get_db)):
     """
     Retrieve the current authenticated user based on the provided JWT token.
 

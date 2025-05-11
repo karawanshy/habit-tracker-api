@@ -4,7 +4,6 @@ from datetime import datetime, date, time, timezone
 from typing import Optional, List
 from pydantic import EmailStr
 import bcrypt
-from passlib.hash import bcrypt
 
 # -------------------------- Enum Classes --------------------------
 
@@ -107,16 +106,19 @@ class User(UserBase, table=True):
 
     def set_password(self, password: str):
         """
-        Hashes and sets the user's password using passlib's bcrypt algorithm.
+        Hashes and sets the user's password using raw bcrypt.
 
         Args:
         - password (str): The plain text password to be hashed.
         """
-        self.password = bcrypt.hash(password)
+        salt = bcrypt.gensalt()
+        hashed = bcrypt.hashpw(password.encode('utf-8'), salt)
+        self.password = hashed.decode('utf-8')  # store as string
+
 
     def verify_password(self, password: str) -> bool:
         """
-        Verifies a given password against the user's stored hashed password.
+        Verifies a given password against the user's stored hashed password using raw bcrypt.
 
         Args:
         - password (str): The plain text password to verify.
@@ -124,7 +126,8 @@ class User(UserBase, table=True):
         Returns:
         - bool: True if the password matches the stored hashed password, False otherwise.
         """
-        return bcrypt.verify(password, self.password)
+        return bcrypt.checkpw(password.encode('utf-8'), self.password.encode('utf-8'))
+
 
     def __repr__(self):
         """

@@ -6,7 +6,7 @@ Implements OAuth2 password flow and JWT-based access tokens.
 """
 
 from fastapi import APIRouter, Depends, HTTPException
-from app.database import get_session
+from app.database import get_db
 import app.schemas as s
 from app.models import User
 from sqlmodel import Session
@@ -19,9 +19,9 @@ router = APIRouter()
 
 
 @router.post("/login", response_model=s.UserLoginResponse)
-def login(
+async def login(
     form_data: OAuth2PasswordRequestForm = Depends(),
-    db: Session = Depends(get_session)
+    db: Session = Depends(get_db)
 ):
     """
     Authenticate a user and return an access token.
@@ -54,7 +54,7 @@ def login(
 
 
 @router.get("/secure-data")
-def secure_endpoint(current_user: User = Depends(get_current_user)):
+async def secure_endpoint(current_user: User = Depends(get_current_user)):
     """
     A protected route that requires user authentication.
 

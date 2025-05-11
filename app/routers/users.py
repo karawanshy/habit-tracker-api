@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends
-from app.database import get_session
+from app.database import get_db
 import app.schemas as s
 from app.models import User
 import app.crud.users as users
@@ -14,7 +14,7 @@ router = APIRouter()
 @router.post("/", response_model=s.UserSummary, status_code=201)
 async def create_user(
     user: s.UserCreate,  # User details to create a new user.
-    db: Session = Depends(get_session)  # Dependency to get the database session.
+    db: Session = Depends(get_db)  # Dependency to get the database session.
 ):
     """
     Create a new user in the database.
@@ -35,7 +35,7 @@ async def create_user(
 async def update_user(
     user: s.UserUpdate,  # Updated user details.
     current_user: User = Depends(get_current_user),  # Dependency to get the currently authenticated user.
-    db: Session = Depends(get_session)  # Dependency to get the database session.
+    db: Session = Depends(get_db)  # Dependency to get the database session.
 ):
     """
     Update the details of the authenticated user.
@@ -54,8 +54,8 @@ async def update_user(
 # ------------------------------ GET ROUTES ------------------------------
 
 @router.get("/", response_model=List[s.UserSummary], dependencies=[Depends(require_admin)])
-def get_users(
-    db: Session = Depends(get_session)  # Dependency to get the database session.
+async def get_users(
+    db: Session = Depends(get_db)  # Dependency to get the database session.
 ):
     """
     Retrieve a list of all users.
@@ -69,9 +69,9 @@ def get_users(
     return users.get_users(db)
 
 @router.get("/{user_id}", response_model=s.UserSummary, dependencies=[Depends(require_admin)])
-def get_user_by_id(
+async def get_user_by_id(
     user_id: int,  # ID of the user to retrieve.
-    db: Session = Depends(get_session)  # Dependency to get the database session.
+    db: Session = Depends(get_db)  # Dependency to get the database session.
 ):
     """
     Retrieve a specific user by their ID.
@@ -87,9 +87,9 @@ def get_user_by_id(
 
 
 @router.get("/by-username/{username}", response_model=s.UserSummary, dependencies=[Depends(require_admin)])
-def get_user_by_username(
+async def get_user_by_username(
     username: str,  # Username of the user to retrieve.
-    db: Session = Depends(get_session)  # Dependency to get the database session.
+    db: Session = Depends(get_db)  # Dependency to get the database session.
 ):
     """
     Retrieve a specific user by their username.
@@ -107,10 +107,10 @@ def get_user_by_username(
 # ------------------------------ DELETE ROUTES ------------------------------
 
 @router.delete("/{user_id}")
-def delete_user(
+async def delete_user(
     user_id: int,  # ID of the user to delete.
     current_user: User = Depends(get_current_user),  # Dependency to get the currently authenticated user.
-    db: Session = Depends(get_session)  # Dependency to get the database session.
+    db: Session = Depends(get_db)  # Dependency to get the database session.
 ):
     """
     Delete a specific user by their ID. Only the authenticated user can delete their own account.

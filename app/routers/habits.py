@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, Query
-from app.database import get_session
+from app.database import get_db
 import app.schemas as s
 from app.models import Category, Frequency, User
 from app.utils import normalize_category, normalize_frequency
@@ -17,7 +17,7 @@ router = APIRouter()
 async def create_habit(
     habit: s.HabitCreate, 
     current_user: User = Depends(get_current_user), 
-    db: Session = Depends(get_session)
+    db: Session = Depends(get_db)
 ):
     """
     Create a new habit for the authenticated user.
@@ -37,7 +37,7 @@ async def create_habit(
 async def mark_habit_completed_today(
     habit_id: int, 
     current_user: User = Depends(get_current_user), 
-    db: Session = Depends(get_session)
+    db: Session = Depends(get_db)
 ):
     """
     Mark a specific habit as completed for today.
@@ -60,7 +60,7 @@ async def update_habit(
     habit_id: int, 
     habit: s.HabitUpdate, 
     current_user: User = Depends(get_current_user), 
-    db: Session = Depends(get_session)
+    db: Session = Depends(get_db)
 ):
     """
     Update an existing habit's details.
@@ -80,11 +80,11 @@ async def update_habit(
 # ------------------------------ GET ROUTES ------------------------------
 
 @router.get("/", response_model=List[s.HabitSummary])
-def get_habits(
+async def get_habits(
     category: Optional[str] = Query(default=None, description=f"One of: {', '.join(c.value for c in Category)}"),
     frequency: Optional[str] = Query(default=None, description=f"One of: {', '.join(f.value for f in Frequency)}"),
     current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_session)
+    db: Session = Depends(get_db)
 ):
     """
     Retrieve a list of habits for the authenticated user.
@@ -105,7 +105,7 @@ def get_habits(
 async def get_habit_by_id(
     habit_id: int, 
     current_user: User = Depends(get_current_user), 
-    db: Session = Depends(get_session)
+    db: Session = Depends(get_db)
 ):
     """
     Retrieve a habit by its ID.
@@ -125,7 +125,7 @@ async def get_habit_by_id(
 async def get_habit_by_name(
     habit_name: str, 
     current_user: User = Depends(get_current_user), 
-    db: Session = Depends(get_session)
+    db: Session = Depends(get_db)
 ):
     """
     Retrieve a habit by its name.
@@ -142,10 +142,10 @@ async def get_habit_by_name(
 
 
 @router.get("/complete/{habit_id}", response_model=s.HabitWithCompletions)
-def get_habit_completion_dates(
+async def get_habit_completion_dates(
     habit_id: int, 
     current_user: User = Depends(get_current_user), 
-    db: Session = Depends(get_session)
+    db: Session = Depends(get_db)
 ):
     """
     Retrieve the completion dates of a specific habit.
@@ -162,10 +162,10 @@ def get_habit_completion_dates(
 
 
 @router.get("/complete/today/{habit_id}", response_model=s.HabitCompletionStatus)
-def get_habit_completion_status(
+async def get_habit_completion_status(
     habit_id: int, 
     current_user: User = Depends(get_current_user), 
-    db: Session = Depends(get_session)
+    db: Session = Depends(get_db)
 ):
     """
     Retrieve the completion status of a specific habit for today.
@@ -184,10 +184,10 @@ def get_habit_completion_status(
 # ------------------------------ DELETE ROUTES ------------------------------
 
 @router.delete("/{habit_id}")
-def delete_habit(
+async def delete_habit(
     habit_id: int, 
     current_user: User = Depends(get_current_user), 
-    db: Session = Depends(get_session)
+    db: Session = Depends(get_db)
 ):
     """
     Delete a specific habit by its ID.

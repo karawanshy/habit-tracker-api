@@ -29,7 +29,7 @@ def init_db():
 
 # ---------------------------- Session Management ----------------------------
 
-def get_session():
+def get_db():
     """
     Provides a database session to interact with the database.
 
@@ -41,8 +41,8 @@ def get_session():
     Yields:
     - Session: A SQLAlchemy Session object used to interact with the database.
     """
-    with Session(engine) as session:
+    with Session(engine) as db:
         try:
-            yield session  # Yield the session to be used by FastAPI endpoints
+            yield db  # Yield the session to be used by FastAPI endpoints
         finally:
-            session.close()  # Ensure the session is closed after usage
+            db.close()  # Ensure the session is closed after usage

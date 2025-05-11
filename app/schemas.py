@@ -3,6 +3,7 @@ from typing import Optional, List
 from datetime import date, time
 from app.models import HabitCompletionBase, Category, Frequency
 from app.utils import normalize_category, normalize_frequency
+from pydantic import ConfigDict
 
 # ------------------------------ SHARED DETAILS ------------------------------
 
@@ -55,6 +56,7 @@ class UserCreate(BaseModel):
     username: str  
     password: str  
     email: str 
+    is_admin: Optional[bool] = False  # Only for testing purposes; should not be set in production.
 
 class UserUpdate(BaseModel):
     """
@@ -89,8 +91,7 @@ class HabitSummary(HabitBasicInfo, HabitDetails):
     """
     start_date: date 
 
-    class Config:
-        orm_mode = True  # Ensures compatibility with ORM models (like SQLAlchemy)
+    model_config = ConfigDict(from_attributes=True)
 
 # Used to show if a habit is completed today (by ID or name)
 class HabitCompletionStatus(HabitBasicInfo):
@@ -113,8 +114,7 @@ class UserResponse(BaseModel):
     id: int
     username: str
 
-    class Config:
-        orm_mode = True 
+    model_config = ConfigDict(from_attributes=True)
 
 class UserSummary(UserResponse):
     """
@@ -123,8 +123,7 @@ class UserSummary(UserResponse):
     email: str
     habits: List[HabitBasicInfo] = []
 
-    class Config:
-        orm_mode = True  # Ensures compatibility with ORM models (like SQLAlchemy)
+    model_config = ConfigDict(from_attributes=True)
 
 class UserLoginResponse(BaseModel):
     """

@@ -28,26 +28,20 @@ async def lifespan(app: FastAPI):
     # Yield control back to FastAPI to run the application
     yield
     
-    # On shutdown, print a message
     print("Shutting down Habit Tracker API.")
 
 # -------------------------- FastAPI App Setup --------------------------
 
 # Create FastAPI application instance with a lifespan context
 app = FastAPI(
-    title="Habit Tracker API",  # Application title in the API documentation
-    lifespan=lifespan           # Set the lifespan management for the app
+    title="Habit Tracker API",
+    lifespan=lifespan
 )
 
 # -------------------------- Routers Setup --------------------------
 
-# Include the users router with the "/users" prefix for user-related endpoints
 app.include_router(users.router, prefix="/users", tags=["Users"])
-
-# Include the habits router with the "/habits" prefix for habit-related endpoints
 app.include_router(habits.router, prefix="/habits", tags=["Habits"])
-
-# Include the auth router for authentication endpoints
 app.include_router(auth.router, tags=["Auth"])
 
 # -------------------------- Root Endpoint --------------------------

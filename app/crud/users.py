@@ -27,7 +27,8 @@ def create_user(user: s.UserCreate, db: Session) -> s.UserSummary:
     """
     db_user = User(
         username=normalize_username(user.username),  # Ensure consistent formatting
-        email=user.email
+        email=user.email,
+        is_admin=user.is_admin
     )
     db_user.set_password(user.password)  # Hash and store the password securely
 
