@@ -201,4 +201,4 @@ async def delete_habit(
     - dict: A dictionary with a success status of the deletion.
     """
     habits.delete_habit(habit_id, current_user.id, db)
-    return {"success": True}
+    return {"detail": "Habit deleted successfully."}

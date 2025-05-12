@@ -4,7 +4,9 @@ from sqlmodel import Session, SQLModel, create_engine, StaticPool
 from fastapi.testclient import TestClient
 from app.main import app
 from app.database import get_db
+from tests.test_helpers import create_test_user, create_access_token
 from app import models
+from uuid import uuid4
 
 # Use in-memory SQLite for testing
 DATABASE_URL = "sqlite:///:memory:"
@@ -55,3 +57,38 @@ def client(session: Session) -> Generator[TestClient, None, None]:
     app.dependency_overrides[get_db] = override_get_db
     yield TestClient(app)
     app.dependency_overrides.clear() # Clear the overrides after the test
+
+@pytest.fixture
+def admin_user(session):
+    return create_test_user(session, is_admin=True)
+
+@pytest.fixture
+def regular_user(session):
+    return create_test_user(session, is_admin=False)
+
+@pytest.fixture
+def admin_user_token(client: TestClient, admin_user) -> str:
+    return create_access_token(client, "admin_user", "password123")
+
+@pytest.fixture
+def regular_user_token(client: TestClient, regular_user) -> str:
+    return create_access_token(client, "regular_user", "password123")
+
+@pytest.fixture
+def create_habit(client: TestClient, regular_user_token):
+    name = f"read books {uuid4()}"  # avoid name collision
+    
+    habit_data = {
+        "name": name,
+        "description": "Read 30 minutes daily",
+        "category": "personal development",
+        "frequency": "daily"
+    }
+
+    response = client.post(
+        "/habits/",
+        json=habit_data,
+        headers={"Authorization": f"Bearer {regular_user_token}"}
+    )
+    assert response.status_code == 201
+    return response.json()

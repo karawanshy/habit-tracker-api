@@ -2,7 +2,6 @@ from fastapi.testclient import TestClient
 from app.crud import users
 from app.schemas import UserCreate
 
-
 def create_test_user(session, is_admin=False):
     user = UserCreate(
         username="admin_user" if is_admin else "regular_user",
@@ -12,8 +11,6 @@ def create_test_user(session, is_admin=False):
     )
     return users.create_user(user, session)
 
-
-def get_auth_headers(client: TestClient, username: str, password: str):
+def create_access_token(client: TestClient, username: str, password: str):
     response = client.post("/login", data={"username": username, "password": password})
-    token = response.json().get("access_token")
-    return {"Authorization": f"Bearer {token}"}
+    return response.json().get("access_token")
