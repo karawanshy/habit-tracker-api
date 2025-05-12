@@ -60,7 +60,7 @@ def client(session: Session) -> Generator[TestClient, None, None]:
     app.dependency_overrides.clear() # Clear the overrides after the test
 
 @pytest.fixture
-def user_factory(client: TestClient, session: Session):
+def user_factory(client: TestClient):
     def _create_user(is_admin=False):
         user_data = {
             "username": f"admin_user {uuid4()}" if is_admin else f"regular_user {uuid4()}",
@@ -89,20 +89,21 @@ def regular_user_token(client: TestClient, user_factory) -> str:
     return create_access_token(client, user['username'], 'password123')
 
 @pytest.fixture
-def create_test_habit(client: TestClient, regular_user_token):
-    name = f"read books {uuid4()}"  # avoid name collision
-    
-    habit_data = {
-        "name": name,
-        "description": "Read 30 minutes daily",
-        "category": "personal development",
-        "frequency": "daily"
-    }
+def habit_factory(client: TestClient, regular_user_token):
+    def _create_habit():
+        habit_data = {
+            "name": f"read books {uuid4()}",  # avoid name collision
+            "description": "Read 30 minutes daily",
+            "category": "personal development",
+            "frequency": "daily"
+        }
+        
+        response = client.post(
+            "/habits/",
+            json=habit_data,
+            headers={"Authorization": f"Bearer {regular_user_token}"}
+        )
 
-    response = client.post(
-        "/habits/",
-        json=habit_data,
-        headers={"Authorization": f"Bearer {regular_user_token}"}
-    )
-    assert response.status_code == 201
-    return response.json()
+        assert response.status_code == 201
+        return response.json()
+    return _create_habit
