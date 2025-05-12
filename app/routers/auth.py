@@ -41,7 +41,7 @@ async def login(
     """
     user = authenticate_user(form_data.username, form_data.password, db)
     if not user:
-        raise HTTPException(status_code=401, detail="Could not validate user.")
+        raise HTTPException(status_code=401, detail="Invalid credentials")
 
     # Generate a JWT token valid for 20 minutes
     token = create_access_token(user.username, user.id, timedelta(minutes=20))
