@@ -4,9 +4,10 @@ from sqlmodel import Session, SQLModel, create_engine, StaticPool
 from fastapi.testclient import TestClient
 from app.main import app
 from app.database import get_db
-from tests.test_helpers import create_test_user, create_access_token
+from tests.test_helpers import create_access_token
 from app import models
 from uuid import uuid4
+from app.schemas import UserCreate
 
 # Use in-memory SQLite for testing
 DATABASE_URL = "sqlite:///:memory:"
@@ -59,23 +60,36 @@ def client(session: Session) -> Generator[TestClient, None, None]:
     app.dependency_overrides.clear() # Clear the overrides after the test
 
 @pytest.fixture
-def admin_user(session):
-    return create_test_user(session, is_admin=True)
+def user_factory(client: TestClient, session: Session):
+    def _create_user(is_admin=False):
+        user_data = {
+            "username": f"admin_user {uuid4()}" if is_admin else f"regular_user {uuid4()}",
+            "email": "admin@example.com" if is_admin else "user@example.com",
+            "password": "password123",
+            "is_admin": is_admin
+        }   
+        
+        response = client.post(
+            "/users/",
+            json=user_data
+        )
+
+        assert response.status_code == 201
+        return response.json()
+    return _create_user
 
 @pytest.fixture
-def regular_user(session):
-    return create_test_user(session, is_admin=False)
+def admin_user_token(client: TestClient, user_factory) -> str:
+    user = user_factory(is_admin=True)
+    return create_access_token(client, user['username'], 'password123')
 
 @pytest.fixture
-def admin_user_token(client: TestClient, admin_user) -> str:
-    return create_access_token(client, "admin_user", "password123")
+def regular_user_token(client: TestClient, user_factory) -> str:
+    user = user_factory(is_admin=False)
+    return create_access_token(client, user['username'], 'password123')
 
 @pytest.fixture
-def regular_user_token(client: TestClient, regular_user) -> str:
-    return create_access_token(client, "regular_user", "password123")
-
-@pytest.fixture
-def create_habit(client: TestClient, regular_user_token):
+def create_test_habit(client: TestClient, regular_user_token):
     name = f"read books {uuid4()}"  # avoid name collision
     
     habit_data = {

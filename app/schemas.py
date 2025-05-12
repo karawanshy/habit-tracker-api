@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, EmailStr
 from typing import Optional, List
 from datetime import date, time
 from app.models import HabitCompletionBase, Category, Frequency
@@ -55,7 +55,7 @@ class UserCreate(BaseModel):
     """
     username: str  
     password: str  
-    email: str 
+    email: EmailStr
     is_admin: Optional[bool] = False  # Only for testing purposes; should not be set in production.
 
 class UserUpdate(BaseModel):

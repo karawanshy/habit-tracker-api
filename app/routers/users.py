@@ -106,9 +106,8 @@ async def get_user_by_username(
 
 # ------------------------------ DELETE ROUTES ------------------------------
 
-@router.delete("/{user_id}")
+@router.delete("/me")
 async def delete_user(
-    user_id: int,  # ID of the user to delete.
     current_user: User = Depends(get_current_user),  # Dependency to get the currently authenticated user.
     db: Session = Depends(get_db)  # Dependency to get the database session.
 ):
@@ -123,5 +122,5 @@ async def delete_user(
     Returns:
     - dict: A dictionary indicating the success of the deletion.
     """
-    users.delete_user(user_id, current_user.id, db)
-    return {"success": True}
+    users.delete_user(current_user.id, db)
+    return {"detail": "User deleted successfully."}
