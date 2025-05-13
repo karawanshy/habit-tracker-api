@@ -1,14 +1,13 @@
-import pytest
 from fastapi.testclient import TestClient
 from app.main import app
-from tests.conftest import regular_user_token
 from datetime import date
 
-def test_create_habit(create_test_habit):
-    assert create_test_habit["name"].startswith("Read Books")
-    assert create_test_habit["category"] == "Personal Development"
-    assert create_test_habit["frequency"] == "Daily"
-    assert "id" in create_test_habit
+def test_create_habit(habit_factory):
+    habit = habit_factory()
+    assert habit["name"].startswith("Read Books")
+    assert habit["category"] == "Personal Development"
+    assert habit["frequency"] == "Daily"
+    assert "id" in habit
 
 def test_create_habit_invalid_category(client: TestClient, regular_user_token):
     invalid_habit_data = {
@@ -52,8 +51,8 @@ def test_create_habit_invalid_frequency(client: TestClient, regular_user_token):
     assert "detail" in data
     assert "frequency" in data["detail"]  # Check if 'category' is mentioned in the error message
 
-def test_mark_habit_completed_today(client: TestClient, create_test_habit, regular_user_token):
-    habit_id = create_test_habit["id"]
+def test_mark_habit_completed_today(client: TestClient, habit_factory, regular_user_token):
+    habit_id = habit_factory()["id"]
 
     # mark the habit as completed today
     response = client.post(
@@ -65,15 +64,15 @@ def test_mark_habit_completed_today(client: TestClient, create_test_habit, regul
     data = response.json()
     assert data["completed_today"] is True
 
-def test_update_habit(client: TestClient, create_test_habit, regular_user_token):
-    habit_id = create_test_habit["id"]
+def test_update_habit(client: TestClient, habit_factory, regular_user_token):
+    habit = habit_factory()
 
     updated_habit_data = {
         "description": "Read 1 hour daily",
     }
 
     response = client.put(
-        f"/habits/{habit_id}",
+        f"/habits/{habit['id']}",
         json=updated_habit_data,
         headers={"Authorization": f"Bearer {regular_user_token}"}
     )
@@ -81,13 +80,13 @@ def test_update_habit(client: TestClient, create_test_habit, regular_user_token)
     assert response.status_code == 200
 
     data = response.json()
-    assert data["name"] == create_test_habit["name"]
+    assert data["name"] == habit["name"]
     assert data["description"] == "Read 1 hour daily"
     assert data["category"] == "Personal Development"
     assert data["frequency"] == "Daily"
 
-def test_get_habits(client: TestClient, create_test_habit, regular_user_token):
-    habit_id = create_test_habit["id"]
+def test_get_habits(client: TestClient, habit_factory, regular_user_token):
+    habit_id = habit_factory()["id"]
 
     response = client.get(
         "/habits/",
@@ -101,8 +100,8 @@ def test_get_habits(client: TestClient, create_test_habit, regular_user_token):
     assert len(data) > 0
     assert data[0]["id"] == habit_id
 
-def test_get_habits_by_category(client: TestClient, create_test_habit, regular_user_token):
-    habit_id = create_test_habit["id"]
+def test_get_habits_by_category(client: TestClient, habit_factory, regular_user_token):
+    habit_id = habit_factory()["id"]
 
     response = client.get(
         "/habits/?category=personal%20development",
@@ -116,8 +115,8 @@ def test_get_habits_by_category(client: TestClient, create_test_habit, regular_u
     assert len(data) > 0
     assert data[0]["id"] == habit_id
 
-def test_get_habits_by_frequency(client: TestClient, create_test_habit, regular_user_token):
-    habit_id = create_test_habit["id"]
+def test_get_habits_by_frequency(client: TestClient, habit_factory, regular_user_token):
+    habit_id = habit_factory()["id"]
 
     response = client.get(
         "/habits/?frequency=daily",
@@ -131,8 +130,8 @@ def test_get_habits_by_frequency(client: TestClient, create_test_habit, regular_
     assert len(data) > 0
     assert data[0]["id"] == habit_id
 
-def test_get_habits_by_category_and_frequency(client: TestClient, create_test_habit, regular_user_token):
-    habit_id = create_test_habit["id"]
+def test_get_habits_by_category_and_frequency(client: TestClient, habit_factory, regular_user_token):
+    habit_id = habit_factory()["id"]
 
     response = client.get(
         "/habits/?category=personal%20development&frequency=daily",
@@ -146,8 +145,8 @@ def test_get_habits_by_category_and_frequency(client: TestClient, create_test_ha
     assert len(data) > 0
     assert data[0]["id"] == habit_id
 
-def test_get_habit_by_id(client: TestClient, create_test_habit, regular_user_token):
-    habit_id = create_test_habit["id"]
+def test_get_habit_by_id(client: TestClient, habit_factory, regular_user_token):
+    habit_id = habit_factory()["id"]
 
     response = client.get(
         f"/habits/{habit_id}",
@@ -163,25 +162,25 @@ def test_get_habit_by_id(client: TestClient, create_test_habit, regular_user_tok
     assert data["category"] == "Personal Development"
     assert data["frequency"] == "Daily"
 
-def test_get_habit_by_name(client: TestClient, create_test_habit, regular_user_token):
-    habit_id = create_test_habit["id"]
+def test_get_habit_by_name(client: TestClient, habit_factory, regular_user_token):
+    habit = habit_factory()
 
     response = client.get(
-        f"/habits/by-name/{create_test_habit['name']}",
+        f"/habits/by-name/{habit['name']}",
         headers={"Authorization": f"Bearer {regular_user_token}"}
     )
 
     assert response.status_code == 200
 
     data = response.json()
-    assert data["id"] == habit_id
+    assert data["id"] == habit["id"]
     assert data["name"].startswith("Read Books")
     assert data["description"] == "Read 30 minutes daily"
     assert data["category"] == "Personal Development"
     assert data["frequency"] == "Daily"
 
-def test_get_habit_completion_status(client: TestClient, create_test_habit, regular_user_token):
-    habit_id = create_test_habit["id"]
+def test_get_habit_completion_status(client: TestClient, habit_factory, regular_user_token):
+    habit_id = habit_factory()["id"]
 
     response = client.get(
         f"/habits/complete/today/{habit_id}",
@@ -191,12 +190,11 @@ def test_get_habit_completion_status(client: TestClient, create_test_habit, regu
     assert response.status_code == 200
 
     data = response.json()
-    print(data)
     assert data["id"] == habit_id
     assert "completed_today" in data
 
-def test_get_habit_completion_dates(client: TestClient, create_test_habit, regular_user_token):
-    habit_id = create_test_habit["id"]
+def test_get_habit_completion_dates(client: TestClient, habit_factory, regular_user_token):
+    habit_id = habit_factory()["id"]
     
     # Mark the habit as completed today
     response = client.post(
@@ -220,8 +218,8 @@ def test_get_habit_completion_dates(client: TestClient, create_test_habit, regul
     today_str = date.today().isoformat()
     assert today_str in data["completed_dates"]
 
-def test_delete_habit(client: TestClient, create_test_habit, regular_user_token):
-    habit_id = create_test_habit["id"]
+def test_delete_habit(client: TestClient, habit_factory, regular_user_token):
+    habit_id = habit_factory()["id"]
 
     response = client.delete(
         f"/habits/{habit_id}",

@@ -42,7 +42,6 @@ def create_user(user: s.UserCreate, db: Session) -> s.UserSummary:
         email=db_user.email,
     )
 
-
 def update_user(user: s.UserUpdate, user_id: int, db: Session) -> s.UserSummary:
     """
     Update user information.

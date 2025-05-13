@@ -8,6 +8,11 @@ load_dotenv()
 # Retrieve the database URL from the environment variable
 DATABASE_URL = os.getenv("DATABASE_URL")
 
+from urllib.parse import unquote
+
+print(f"Raw DATABASE_URL from environment: {os.getenv('DATABASE_URL')}")
+print(f"Decoded DATABASE_URL: {unquote(os.getenv('DATABASE_URL'))}")
+
 # Raise an error if the DATABASE_URL is not found in the .env file
 if not DATABASE_URL:
     raise ValueError("DATABASE_URL is not found in .env file")
