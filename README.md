@@ -76,43 +76,6 @@ To run all tests:
 pytest
 ```
 
-## 🗂️ Project Structure
-
-app/
-│
-├── auth.py
-├── database.py
-├── main.py
-├── models.py
-├── schemas.py
-├── utils.py
-│
-├── crud/
-│   ├── completions.py
-│   ├── habits.py
-│   ├── serializers.py
-│   └── users.py
-│
-└── routers/
-    ├── auth.py
-    ├── habits.py
-    └── users.py
-
-tests/
-├── conftest.py
-├── conftest_crud.py
-├── test_helpers.py
-│
-├── crud/
-│   ├── test_crud_completions.py
-│   ├── test_crud_habits.py
-│   └── test_crud_users.py
-│
-└── routers/
-    ├── test_route_auth.py
-    ├── test_route_habits.py
-    └── test_route_users.py
-
 ## ⚙️ Setup Instructions
 1. clone the repo
 2. Create a PostgreSQL database
